@@ -9,6 +9,7 @@ import ProductModal from './components/ProductModal';
 import AuthModal from './components/AuthModal';
 import CartDrawer from './components/CartDrawer';
 import CheckoutModal from './components/CheckoutModal';
+import AdminModal from './components/AdminModal';
 import Footer from './components/Footer';
 import { CheckCircle2 } from 'lucide-react';
 
@@ -44,6 +45,7 @@ function ShopContent() {
       <AuthModal />
       <CartDrawer />
       <CheckoutModal />
+      <AdminModal />
     </div>
   );
 }

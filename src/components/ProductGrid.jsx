@@ -13,11 +13,12 @@ export default function ProductGrid() {
     searchQuery,
     setSearchQuery,
     sortBy,
-    setSortBy
+    setSortBy,
+    products
   } = useShop();
 
   // Filter products by demographic, category, and search query
-  const filteredProducts = PRODUCTS.filter((product) => {
+  const filteredProducts = (products || PRODUCTS).filter((product) => {
     // Demographic filter
     const matchesDemographic =
       activeDemographic === 'all' ||

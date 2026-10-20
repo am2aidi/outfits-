@@ -13,7 +13,8 @@ export default function CheckoutModal() {
     cartTotal,
     formatPrice,
     user,
-    placeOrder
+    placeOrder,
+    productMap
   } = useShop();
 
   const [paymentMethod, setPaymentMethod] = useState('momo'); // 'momo' | 'airtel' | 'visa' | 'mc'
@@ -151,7 +152,7 @@ export default function CheckoutModal() {
 
               <div className="space-y-1 py-1">
                 {orderReceipt.items.map((item, idx) => {
-                  const p = PRODUCT_MAP[item.id];
+                  const p = (productMap && productMap[item.id]) || PRODUCT_MAP[item.id];
                   return (
                     <div key={idx} className="flex justify-between text-zinc-300">
                       <span className="truncate max-w-[200px]">

@@ -35,7 +35,9 @@ export default function FittingRoomModal() {
     clearFit,
     addEntireFitToCart,
     formatPrice,
-    showToast
+    showToast,
+    products,
+    productMap
   } = useShop();
 
   // View mode: 'mannequin' (interactive vector store mannequin) | 'model' (real Black fashion models) | 'ai' (Gemini AI photo generation)
@@ -67,8 +69,8 @@ export default function FittingRoomModal() {
   const currentSlot = fitState.slot;
   const wornItems = fitState.worn;
 
-  // Filter products for the chosen slot and demographic
-  const availableSlotProducts = PRODUCTS.filter(p => {
+  // Filter products for the chosen slot and demographic from dynamic products
+  const availableSlotProducts = (products || PRODUCTS).filter(p => {
     const matchesDemographic = p.demographic === currentDemographic || p.demographic === 'unisex';
     const matchesSlot = p.slot === currentSlot;
     return matchesDemographic && matchesSlot;
@@ -79,7 +81,7 @@ export default function FittingRoomModal() {
   const equippedCount = equippedIds.length;
   const totalSlots = FITTING_SLOTS.length;
   const fitTotal = equippedIds.reduce((sum, id) => {
-    const prod = PRODUCT_MAP[id];
+    const prod = (productMap && productMap[id]) || PRODUCT_MAP[id];
     return sum + (prod ? prod.price : 0);
   }, 0);
 
@@ -415,7 +417,7 @@ export default function FittingRoomModal() {
                 {/* Thumbnails row */}
                 <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none min-h-[52px]">
                   {equippedIds.map(id => {
-                    const prod = PRODUCT_MAP[id];
+                    const prod = (productMap && productMap[id]) || PRODUCT_MAP[id];
                     if (!prod) return null;
                     return (
                       <div

@@ -3,7 +3,7 @@ import { Globe, ArrowUpRight, Shield, Heart } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 
 export default function Footer() {
-  const { setActiveCategory, setActiveDemographic, setIsFittingRoomOpen } = useShop();
+  const { setActiveCategory, setActiveDemographic, setIsFittingRoomOpen, setIsAdminOpen } = useShop();
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -51,6 +51,15 @@ export default function Footer() {
               HURANOW
             </h4>
             <ul className="space-y-2.5 font-bold text-white text-xs">
+              <li>
+                <button
+                  onClick={() => setIsAdminOpen(true)}
+                  className="hover:text-amber-400 transition-colors flex items-center gap-1 text-amber-400 font-extrabold"
+                >
+                  <span>ADMIN DASHBOARD</span>
+                  <ArrowUpRight className="w-3 h-3 text-amber-400" />
+                </button>
+              </li>
               <li>
                 <button
                   onClick={() => setIsFittingRoomOpen(true)}

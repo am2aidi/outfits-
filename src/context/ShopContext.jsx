@@ -76,6 +76,37 @@ export function ShopProvider({ children }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
 
+  // Custom Dynamic Products Catalog (Stored in LocalStorage for Admin Dashboard)
+  const [products, setProducts] = useState(() => {
+    try {
+      const saved = localStorage.getItem('hn_custom_products');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+      return PRODUCTS;
+    } catch {
+      return PRODUCTS;
+    }
+  });
+
+  // Fast Product Lookup Map
+  const productMap = React.useMemo(() => {
+    return products.reduce((acc, p) => {
+      acc[p.id] = p;
+      return acc;
+    }, {});
+  }, [products]);
+
+  // Save Dynamic Products Catalog
+  useEffect(() => {
+    try {
+      localStorage.setItem('hn_custom_products', JSON.stringify(products));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [products]);
+
   // Modals & Drawers
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -85,6 +116,7 @@ export function ShopProvider({ children }) {
   const [isFittingRoomOpen, setIsFittingRoomOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
 
   // Toast Notification
   const [toastMessage, setToastMessage] = useState('');
@@ -144,7 +176,7 @@ export function ShopProvider({ children }) {
 
   // Raw internal add to cart without gate
   const executeAddToCart = (productId, size = null, quiet = false, targetCart = null) => {
-    const product = PRODUCT_MAP[productId];
+    const product = productMap[productId] || PRODUCT_MAP[productId];
     if (!product) return;
 
     let finalSize = size;
@@ -190,7 +222,7 @@ export function ShopProvider({ children }) {
     }
 
     equippedIds.forEach(id => {
-      const prod = PRODUCT_MAP[id];
+      const prod = productMap[id] || PRODUCT_MAP[id];
       if (prod) {
         let size = 'One Size';
         if (prod.category === 'clothes') size = fitState.sizes.clothes;
@@ -351,7 +383,7 @@ export function ShopProvider({ children }) {
 
   // Cart Calculations
   const cartSubtotal = cart.reduce((sum, item) => {
-    const prod = PRODUCT_MAP[item.id];
+    const prod = productMap[item.id] || PRODUCT_MAP[item.id];
     return sum + (prod ? prod.price * item.quantity : 0);
   }, 0);
 
@@ -390,7 +422,7 @@ export function ShopProvider({ children }) {
   };
 
   const openFittingRoomWithProduct = (productId) => {
-    const product = PRODUCT_MAP[productId];
+    const product = productMap[productId] || PRODUCT_MAP[productId];
     if (!product) return;
 
     const demo = product.demographic === 'all' ? 'men' : product.demographic;
@@ -405,6 +437,51 @@ export function ShopProvider({ children }) {
       }
     }));
     setIsFittingRoomOpen(true);
+  };
+
+  // Admin Catalog Operations (Add New Clothes, Edit, Delete, Reset)
+  const addProduct = (newProduct) => {
+    const id = newProduct.id || `hn-cust-${Date.now()}`;
+    const productToAdd = {
+      ...newProduct,
+      id,
+      rating: newProduct.rating || 5.0,
+      reviews: newProduct.reviews || 1,
+      tag: newProduct.tag || 'NEW DROP',
+      tagType: newProduct.tagType || 'new',
+      colors: newProduct.colors?.length ? newProduct.colors : ['#09090b'],
+      details: Array.isArray(newProduct.details)
+        ? newProduct.details
+        : (newProduct.details ? newProduct.details.split('\n').filter(Boolean) : ['HURANOW Official Studio Craft']),
+      garmentStyle: newProduct.garmentStyle || (newProduct.slot === 'top' ? 'jacket' : 'cargo')
+    };
+
+    setProducts(prev => [productToAdd, ...prev]);
+    showToast(`Added "${productToAdd.name}" to store catalog!`);
+    return productToAdd;
+  };
+
+  const updateProduct = (id, updatedFields) => {
+    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updatedFields } : p));
+    showToast('Product updated');
+  };
+
+  const deleteProduct = (id) => {
+    setProducts(prev => prev.filter(p => p.id !== id));
+    setFitState(prev => {
+      const updatedWorn = { ...prev.worn };
+      Object.keys(updatedWorn).forEach(slot => {
+        if (updatedWorn[slot] === id) updatedWorn[slot] = null;
+      });
+      return { ...prev, worn: updatedWorn };
+    });
+    showToast('Product removed from store');
+  };
+
+  const resetProductsToDefault = () => {
+    setProducts(PRODUCTS);
+    localStorage.removeItem('hn_custom_products');
+    showToast('Restored original HURANOW collection');
   };
 
   // Place Order Simulation
@@ -490,6 +567,8 @@ export function ShopProvider({ children }) {
         setIsCheckoutOpen,
         quickViewProduct,
         setQuickViewProduct,
+        isAdminOpen,
+        setIsAdminOpen,
 
         // Toast
         toastMessage,
@@ -504,6 +583,14 @@ export function ShopProvider({ children }) {
         clearFit,
         openFittingRoomWithProduct,
         addEntireFitToCart,
+
+        // Dynamic Catalog & Admin Operations
+        products,
+        productMap,
+        addProduct,
+        updateProduct,
+        deleteProduct,
+        resetProductsToDefault,
 
         // Order
         orders,

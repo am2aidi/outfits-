@@ -34,7 +34,8 @@ export default function Header() {
     setActiveCategory,
     searchQuery,
     setSearchQuery,
-    showToast
+    showToast,
+    setIsAdminOpen
   } = useShop();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -54,7 +55,19 @@ export default function Header() {
             <span className="hidden md:inline text-[#a1a1a6]">Fit, wear, buy. Try outfits on our live mannequin.</span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {/* Admin Portal Button */}
+            <button
+              onClick={() => setIsAdminOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-amber-400 text-zinc-300 hover:text-white transition-all text-[11px] font-bold"
+              title="Open Admin Dashboard & Clothes Manager"
+            >
+              <SlidersHorizontal className="w-3 h-3 text-amber-400" />
+              <span>Admin Portal</span>
+            </button>
+
+            <span className="text-[#3a3a3c]">|</span>
+
             {/* Currency Switcher */}
             <div className="flex items-center gap-1.5 bg-[#121214] border border-[#27272a] rounded px-2 py-0.5 text-white">
               <Globe className="w-3 h-3 text-[#a1a1a6]" />
@@ -87,10 +100,19 @@ export default function Header() {
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-44 bg-[#141416] border border-[#27272a] rounded-lg shadow-2xl py-2 z-50 text-xs">
+                  <div className="absolute right-0 mt-2 w-48 bg-[#141416] border border-[#27272a] rounded-lg shadow-2xl py-2 z-50 text-xs">
                     <div className="px-3 py-1.5 border-b border-[#27272a] text-[#a1a1a6]">
                       Signed in as <b className="text-white block truncate">{user}</b>
                     </div>
+                    <button
+                      onClick={() => {
+                        setIsAdminOpen(true);
+                        setIsUserMenuOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 hover:bg-[#222226] text-amber-400 font-bold flex items-center gap-2"
+                    >
+                      <SlidersHorizontal className="w-3.5 h-3.5 text-amber-400" /> Admin Dashboard
+                    </button>
                     <button
                       onClick={() => {
                         setIsFittingRoomOpen(true);
@@ -355,6 +377,19 @@ export default function Header() {
                   {cat.label}
                 </button>
               ))}
+            </div>
+
+            <div className="pt-3 border-t border-zinc-800 flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  setIsAdminOpen(true);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full py-2.5 rounded-xl bg-amber-400 text-black font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg"
+              >
+                <SlidersHorizontal className="w-4 h-4 text-black" />
+                <span>Admin Dashboard & Add Clothes</span>
+              </button>
             </div>
           </div>
         )}

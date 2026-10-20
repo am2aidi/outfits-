@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Ruler, Sparkles, Check, User, Layers, Eye, ChevronRight, Tag } from 'lucide-react';
 import { PRODUCT_MAP, BLACK_MODELS } from '../data/products';
+import { useShop } from '../context/ShopContext';
 
 export default function MannequinVisualizer({
   demographic = 'men',
@@ -20,6 +21,7 @@ export default function MannequinVisualizer({
   variant = 'full', // 'full' (with sliders in modal) | 'showcase' (sleek in Hero & Banner)
   onQuickOutfitSelect
 }) {
+  const { productMap } = useShop();
   const [localFinish, setLocalFinish] = useState('obsidian');
   const finish = parentFinish || localFinish;
   const setFinish = onFinishChange || setLocalFinish;
@@ -27,13 +29,14 @@ export default function MannequinVisualizer({
   const [showRulerGuides, setShowRulerGuides] = useState(false);
   const [activeSlotFocus, setActiveSlotFocus] = useState('top');
 
-  // Look up equipped products
-  const topProduct = worn.top ? PRODUCT_MAP[worn.top] : null;
-  const bottomProduct = worn.bottom ? PRODUCT_MAP[worn.bottom] : null;
-  const shoeProduct = worn.shoe ? PRODUCT_MAP[worn.shoe] : null;
-  const headProduct = worn.head ? PRODUCT_MAP[worn.head] : null;
-  const faceProduct = worn.face ? PRODUCT_MAP[worn.face] : null;
-  const bagProduct = worn.bag ? PRODUCT_MAP[worn.bag] : null;
+  // Look up equipped products using dynamic productMap
+  const lookup = productMap || PRODUCT_MAP;
+  const topProduct = worn.top ? lookup[worn.top] : null;
+  const bottomProduct = worn.bottom ? lookup[worn.bottom] : null;
+  const shoeProduct = worn.shoe ? lookup[worn.shoe] : null;
+  const headProduct = worn.head ? lookup[worn.head] : null;
+  const faceProduct = worn.face ? lookup[worn.face] : null;
+  const bagProduct = worn.bag ? lookup[worn.bag] : null;
 
   const currentModel = BLACK_MODELS[demographic] || BLACK_MODELS.men;
 
@@ -67,10 +70,16 @@ export default function MannequinVisualizer({
 
     // 3. Studio Catalog Mannequin (from store-fitting-room.html m1, m2, m3)
     if (finish === 'studio') {
+      if (topProduct?.mannequinImage) return topProduct.mannequinImage;
       if (topProduct?.garmentStyle === 'puffer' || topProduct?.id === 'hn-top-04') return '/m2.jpg';
       if (topProduct?.garmentStyle === 'denim' || topProduct?.id === 'hn-top-05') return '/m3.jpg';
       if (topProduct?.garmentStyle === 'coat' || topProduct?.id === 'hn-wtop-02') return '/m1.jpg';
       return '/m1.jpg';
+    }
+
+    // 4. Custom Mannequin / Fit image (from Admin Dashboard upload or URL):
+    if (topProduct?.mannequinImage) {
+      return topProduct.mannequinImage;
     }
 
     // 4. Default: Matte Black Boutique Mannequin wearing the HURANOW garments on glass pedestal

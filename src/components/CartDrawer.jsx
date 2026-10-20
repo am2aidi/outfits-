@@ -18,7 +18,8 @@ export default function CartDrawer() {
     formatPrice,
     setIsCheckoutOpen,
     openFittingRoomWithProduct,
-    showToast
+    showToast,
+    productMap
   } = useShop();
 
   const [promoCode, setPromoCode] = useState('');
@@ -97,7 +98,7 @@ export default function CartDrawer() {
           <div className="flex-1 overflow-y-auto px-6 py-4 divide-y divide-zinc-800/80">
             {cart.length > 0 ? (
               cart.map((item, index) => {
-                const product = PRODUCT_MAP[item.id];
+                const product = (productMap && productMap[item.id]) || PRODUCT_MAP[item.id];
                 if (!product) return null;
 
                 return (
