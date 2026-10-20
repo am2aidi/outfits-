@@ -25,6 +25,8 @@ export default function FittingRoomModal() {
 
   // View mode: 'mannequin' (store display mannequin that wears clothes) or 'model' (real Black fashion model)
   const [viewMode, setViewMode] = useState('mannequin');
+  const [userHeight, setUserHeight] = useState(178);
+  const [userBuild, setUserBuild] = useState('athletic');
 
   if (!isFittingRoomOpen) return null;
 
@@ -150,12 +152,17 @@ export default function FittingRoomModal() {
             <div className="w-full flex-1 flex items-center justify-center relative my-2">
               
               {viewMode === 'mannequin' ? (
-                /* 1. SHOP DISPLAY MANNEQUIN (PHYSICALLY WEARS SELECTED GARMENTS) */
+                /* 1. SHOP DISPLAY MANNEQUIN (PHYSICALLY WEARS SELECTED GARMENTS & MATCHES LENGTH) */
                 <MannequinVisualizer
                   demographic={currentDemographic}
                   worn={wornItems}
                   onSlotSelect={(slot) => setFitState(prev => ({ ...prev, slot }))}
                   formatPrice={formatPrice}
+                  userHeight={userHeight}
+                  onHeightChange={setUserHeight}
+                  userBuild={userBuild}
+                  onBuildChange={setUserBuild}
+                  selectedSize={fitState.sizes.clothes}
                 />
               ) : (
                 /* 2. REAL BLACK FASHION MODEL PHOTOGRAPHY */

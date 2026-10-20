@@ -112,6 +112,9 @@ export default function FittingRoomBanner() {
                       worn={fitState.worn}
                       onSlotSelect={() => setIsFittingRoomOpen(true)}
                       formatPrice={formatPrice}
+                      userHeight={178}
+                      userBuild="athletic"
+                      selectedSize={fitState.sizes.clothes}
                     />
                   ) : (
                     <div className="relative w-full h-full">
