@@ -10,10 +10,14 @@ export default function ProductCard({ product }) {
     toggleWishlist,
     formatPrice,
     openFittingRoomWithProduct,
-    setQuickViewProduct
+    setQuickViewProduct,
+    fitState,
+    equipFitItem,
+    showToast
   } = useShop();
 
   const isFavorited = wishlist.includes(product.id);
+  const isWorn = Boolean(product.slot && fitState?.worn?.[product.slot] === product.id);
   const [selectedColorIndex, setSelectedColorIndex] = useState(0);
 
   // Available sizes for this category & demographic
@@ -81,21 +85,45 @@ export default function ProductCard({ product }) {
           </div>
         )}
 
-        {/* Wishlist Heart Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleWishlist(product.id);
-          }}
-          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-zinc-700 flex items-center justify-center text-white hover:scale-110 active:scale-90 transition-all"
-          aria-label="Save to Wishlist"
-        >
-          <Heart
-            className={`w-4 h-4 ${
-              isFavorited ? 'fill-red-500 text-red-500' : 'text-zinc-300'
-            }`}
-          />
-        </button>
+        {/* Live Mannequin Hanger & Wishlist Heart Controls */}
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+          {product.slot && product.slot !== 'beauty' && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                equipFitItem(product.slot, product.id);
+                showToast(isWorn ? `Removed ${product.name} from mannequin` : `Dressed ${product.name} on mannequin`);
+              }}
+              className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all ${
+                isWorn
+                  ? 'bg-amber-500 text-black border-amber-400 ring-2 ring-amber-400/50 scale-105 shadow-lg'
+                  : 'bg-black/70 backdrop-blur-md border-zinc-700 text-zinc-300 hover:text-white hover:border-amber-400 hover:scale-110 active:scale-95'
+              }`}
+              title={isWorn ? 'Worn on mannequin (tap to remove)' : 'Tap hanger to wear on mannequin'}
+              aria-label={isWorn ? 'Remove from mannequin' : 'Try on mannequin'}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 4a2.5 2.5 0 0 1 2.5 2.5c0 1-.6 1.8-1.5 2.2L21 15a2 2 0 0 1-1 3.5H4A2 2 0 0 1 3 15l8-6.3c-.9-.4-1.5-1.2-1.5-2.2A2.5 2.5 0 0 1 12 4z"/>
+              </svg>
+            </button>
+          )}
+
+          {/* Wishlist Heart Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleWishlist(product.id);
+            }}
+            className="w-8 h-8 rounded-full bg-black/70 backdrop-blur-md border border-zinc-700 flex items-center justify-center text-white hover:scale-110 active:scale-90 transition-all"
+            aria-label="Save to Wishlist"
+          >
+            <Heart
+              className={`w-4 h-4 ${
+                isFavorited ? 'fill-red-500 text-red-500' : 'text-zinc-300'
+              }`}
+            />
+          </button>
+        </div>
 
         {/* Quick "Try on Mannequin" Floating Overlay Button */}
         {product.slot !== 'beauty' && (
@@ -104,10 +132,14 @@ export default function ProductCard({ product }) {
               e.stopPropagation();
               openFittingRoomWithProduct(product.id);
             }}
-            className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 bg-black/85 backdrop-blur-md border border-zinc-700 hover:border-white text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-xl opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0"
+            className={`absolute bottom-3 right-3 z-10 flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full shadow-xl transition-all transform ${
+              isWorn
+                ? 'bg-amber-500 text-black border border-amber-400 opacity-100 translate-y-0'
+                : 'bg-black/85 backdrop-blur-md border border-zinc-700 hover:border-white text-white opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0'
+            }`}
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>Try on Mannequin</span>
+            <Sparkles className={`w-3.5 h-3.5 ${isWorn ? 'text-black' : 'text-amber-400'}`} />
+            <span>{isWorn ? 'Dressed • View Studio' : 'Try on Mannequin'}</span>
           </button>
         )}
       </div>
