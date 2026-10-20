@@ -5,6 +5,7 @@ import Hero from './components/Hero';
 import FittingRoomBanner from './components/FittingRoomBanner';
 import ProductGrid from './components/ProductGrid';
 import FittingRoomModal from './components/FittingRoomModal';
+import FloatingFittingRoom from './components/FloatingFittingRoom';
 import ProductModal from './components/ProductModal';
 import AuthModal from './components/AuthModal';
 import CartDrawer from './components/CartDrawer';
@@ -40,6 +41,7 @@ function ShopContent() {
 
       {/* Interactive Overlays */}
       <FittingRoomModal />
+      <FloatingFittingRoom />
       <ProductModal />
       <AuthModal />
       <CartDrawer />
