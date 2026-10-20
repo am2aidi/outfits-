@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { DEMOGRAPHICS, CATEGORIES } from '../data/products';
+import HuranowLogo from './HuranowLogo';
 
 export default function Header() {
   const {
@@ -20,6 +21,7 @@ export default function Header() {
     logout,
     totalItemCount,
     wishlist,
+    openCart,
     setIsCartOpen,
     setIsAuthOpen,
     setAuthMode,
@@ -150,14 +152,7 @@ export default function Header() {
               }}
               className="group text-left"
             >
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-white text-black flex items-center justify-center font-black rounded-sm tracking-tighter text-sm group-hover:scale-105 transition-transform">
-                  H
-                </div>
-                <span className="text-2xl font-black tracking-wider uppercase text-white font-display">
-                  HURANOW
-                </span>
-              </div>
+              <HuranowLogo className="w-8 h-8 group-hover:scale-105 transition-transform" showText={true} />
             </button>
           </div>
 
@@ -243,9 +238,9 @@ export default function Header() {
               )}
             </button>
 
-            {/* Cart / Bag Button */}
+            {/* Cart / Bag Button (Auth Gated) */}
             <button
-              onClick={() => setIsCartOpen(true)}
+              onClick={openCart}
               className="relative flex items-center gap-2 bg-white text-black px-3.5 py-1.5 rounded-full font-bold text-xs hover:bg-zinc-200 transition-transform active:scale-95"
             >
               <ShoppingBag className="w-4 h-4" />

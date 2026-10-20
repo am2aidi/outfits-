@@ -23,9 +23,9 @@ export default function Hero() {
           {/* Left Column: Bold Nike Impact Typography */}
           <div className="lg:col-span-7 flex flex-col justify-center">
             {/* Tag Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-zinc-900 border border-zinc-700 rounded-full text-xs font-semibold text-zinc-300 w-fit mb-6">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-zinc-900 border border-zinc-700 rounded-full text-xs font-semibold text-zinc-300 w-fit mb-6">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span className="uppercase tracking-widest text-[11px] text-white font-bold">Spring / Summer 2026</span>
+              <span className="uppercase tracking-widest text-[11px] text-white font-bold">Pan-African Stealth • 2026</span>
               <span className="text-zinc-600">•</span>
               <span className="text-zinc-400">All Demographics</span>
             </div>
@@ -38,10 +38,9 @@ export default function Hero() {
               </span>
             </h1>
 
-            {/* Subtext from User's original vision */}
+            {/* Subtext */}
             <p className="text-base sm:text-lg text-[#a1a1aa] max-w-xl font-normal leading-relaxed mb-8">
-              Dress a real mannequin in outfits, footwear, and accessories for <strong className="text-white">Men</strong>, <strong className="text-white">Women</strong>, <strong className="text-white">Kids</strong>, and <strong className="text-white">Babies</strong>. 
-              Find the perfect synergy, then add the whole look to your bag in a single tap.
+              Dress a real shop display mannequin or preview on <strong className="text-white">Black fashion models</strong> with outfits, footwear, and pure African luxury skincare for <strong className="text-white">Men</strong>, <strong className="text-white">Women</strong>, <strong className="text-white">Kids</strong>, and <strong className="text-white">Babies</strong>. Add the whole look to your bag in a single tap.
             </p>
 
             {/* Hero CTAs */}

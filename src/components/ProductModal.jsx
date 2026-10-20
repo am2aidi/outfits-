@@ -101,7 +101,14 @@ export default function ProductModal() {
             <div>
               {/* Category & Rating */}
               <div className="flex items-center justify-between text-xs text-zinc-400 font-semibold uppercase tracking-wider mb-2">
-                <span>{product.demographic} · {product.category}</span>
+                <span className="flex items-center gap-2">
+                  <span>{product.demographic} · {product.category}</span>
+                  {product.origin && (
+                    <span className="text-[10px] bg-zinc-900 border border-zinc-700 px-2 py-0.5 rounded text-zinc-300 font-bold lowercase">
+                      📍 {product.origin}
+                    </span>
+                  )}
+                </span>
                 <span className="text-amber-400 flex items-center gap-1 font-bold">
                   ★ {product.rating} ({product.reviews} reviews)
                 </span>

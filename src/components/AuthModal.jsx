@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { X, User, Mail, Lock, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 
+import HuranowLogo from './HuranowLogo';
+
 export default function AuthModal() {
   const {
     isAuthOpen,
     setIsAuthOpen,
     authMode,
     setAuthMode,
+    authPromptMessage,
     login,
     signup
   } = useShop();
@@ -64,12 +67,7 @@ export default function AuthModal() {
 
         {/* Brand Icon */}
         <div className="flex items-center gap-2 mb-6">
-          <div className="w-7 h-7 bg-white text-black flex items-center justify-center font-black rounded-sm text-xs">
-            H
-          </div>
-          <span className="font-display font-black text-xl tracking-wider text-white uppercase">
-            HURANOW CLUB
-          </span>
+          <HuranowLogo className="w-8 h-8" showText={true} textClassName="text-xl" />
         </div>
 
         {/* Mode Toggle */}
@@ -108,6 +106,14 @@ export default function AuthModal() {
             ? 'Sign in to access your fitting studio, saved bag, and order history.'
             : 'Join HURANOW to unlock instant checkout, fitting studio saves, and VIP drop access.'}
         </p>
+
+        {/* Gated Action Prompt Message */}
+        {authPromptMessage && (
+          <div className="mb-4 p-3 bg-zinc-900 border border-amber-500/50 rounded-xl text-xs text-amber-300 font-semibold flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0 animate-ping"></span>
+            <span>{authPromptMessage}</span>
+          </div>
+        )}
 
         {/* Error message */}
         {error && (

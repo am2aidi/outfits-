@@ -115,11 +115,18 @@ export default function ProductCard({ product }) {
       {/* Product Information */}
       <div className="p-4 flex flex-col flex-1 justify-between">
         <div>
-          {/* Demographic & Category Subtitle */}
+          {/* Demographic & Origin Subtitle */}
           <div className="flex items-center justify-between text-[11px] text-zinc-400 font-semibold uppercase tracking-wider mb-1">
-            <span>{product.demographic} · {product.category}</span>
+            <span className="flex items-center gap-1.5">
+              <span>{product.demographic} · {product.category}</span>
+              {product.origin && (
+                <span className="text-[9px] bg-zinc-900 border border-zinc-700 px-1.5 py-0.2 rounded text-zinc-300 font-bold lowercase">
+                  📍 {product.origin}
+                </span>
+              )}
+            </span>
             {product.rating && (
-              <span className="text-zinc-300 flex items-center gap-1">
+              <span className="text-zinc-300 flex items-center gap-1 shrink-0">
                 ★ {product.rating}
               </span>
             )}

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { PRODUCTS, PRODUCT_MAP, CURRENCY_RATES, SIZE_SYSTEM, MANNEQUINS } from '../data/products';
+import { PRODUCTS, PRODUCT_MAP, CURRENCY_RATES, SIZE_SYSTEM } from '../data/products';
 import confetti from 'canvas-confetti';
 
 const ShopContext = createContext(null);
@@ -80,10 +80,11 @@ export function ShopProvider({ children }) {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login');
+  const [authPromptMessage, setAuthPromptMessage] = useState('');
+  const [pendingCartAction, setPendingCartAction] = useState(null);
   const [isFittingRoomOpen, setIsFittingRoomOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
-  const [pendingAction, setPendingAction] = useState(null);
 
   // Toast Notification
   const [toastMessage, setToastMessage] = useState('');
@@ -94,12 +95,12 @@ export function ShopProvider({ children }) {
     demographic: 'men',
     slot: 'top',
     worn: {
-      top: 1, // Default equipped for instant preview!
-      bottom: 3,
-      shoe: 4,
-      head: 15,
-      face: 16,
-      bag: null
+      top: 'hn-top-01',
+      bottom: 'hn-bot-01',
+      shoe: 'hn-sh-01',
+      head: 'hn-acc-02',
+      face: 'hn-acc-03',
+      bag: 'hn-acc-01'
     },
     sizes: {
       clothes: 'L',
@@ -141,15 +142,121 @@ export function ShopProvider({ children }) {
     return config.format(rwfAmount);
   };
 
-  // Auth gate for actions requiring login if desired
-  const requireAuth = (callback) => {
-    if (user) {
-      callback();
-    } else {
-      setPendingAction(() => callback);
+  // Raw internal add to cart without gate
+  const executeAddToCart = (productId, size = null, quiet = false, targetCart = null) => {
+    const product = PRODUCT_MAP[productId];
+    if (!product) return;
+
+    let finalSize = size;
+    if (!finalSize) {
+      if (product.category === 'clothes') {
+        const sizes = SIZE_SYSTEM[product.demographic]?.clothes || ['M'];
+        finalSize = sizes[Math.floor(sizes.length / 2)];
+      } else if (product.category === 'shoes') {
+        const sizes = SIZE_SYSTEM[product.demographic]?.shoes || ['42'];
+        finalSize = sizes[Math.floor(sizes.length / 2)];
+      } else {
+        finalSize = 'One Size';
+      }
+    }
+
+    setCart(prev => {
+      const current = targetCart || prev;
+      const existing = current.find(item => item.id === productId && item.size === finalSize);
+      let updated;
+      if (existing) {
+        updated = current.map(item =>
+          item.id === productId && item.size === finalSize
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      } else {
+        updated = [...current, { id: productId, size: finalSize, quantity: 1, addedAt: Date.now() }];
+      }
+      return updated;
+    });
+
+    if (!quiet) {
+      showToast(`Added ${product.name} to bag`);
+    }
+  };
+
+  // Raw internal add entire fit to cart
+  const executeAddEntireFitToCart = () => {
+    const equippedIds = Object.values(fitState.worn).filter(Boolean);
+    if (!equippedIds.length) {
+      showToast('Select at least one piece to add to bag');
+      return;
+    }
+
+    equippedIds.forEach(id => {
+      const prod = PRODUCT_MAP[id];
+      if (prod) {
+        let size = 'One Size';
+        if (prod.category === 'clothes') size = fitState.sizes.clothes;
+        if (prod.category === 'shoes') size = fitState.sizes.shoes;
+        executeAddToCart(id, size, true);
+      }
+    });
+
+    setIsFittingRoomOpen(false);
+    setIsCartOpen(true);
+    showToast(`${equippedIds.length} pieces added to your cart`);
+  };
+
+  // Public addToCart: AUTH GATED just like user requested!
+  const addToCart = (productId, size = null, quiet = false) => {
+    if (!user) {
+      setPendingCartAction({ type: 'add_to_cart', productId, size, quiet });
+      setAuthPromptMessage('Log in to add items to your cart.');
       setAuthMode('login');
       setIsAuthOpen(true);
-      showToast('Please log in or create an account to proceed');
+      return;
+    }
+    executeAddToCart(productId, size, quiet);
+  };
+
+  // Public addEntireFitToCart: AUTH GATED
+  const addEntireFitToCart = () => {
+    if (!user) {
+      setPendingCartAction({ type: 'add_outfit' });
+      setAuthPromptMessage('Log in to add this outfit to your cart.');
+      setAuthMode('login');
+      setIsAuthOpen(true);
+      return;
+    }
+    executeAddEntireFitToCart();
+  };
+
+  // Public openCart: AUTH GATED
+  const openCart = () => {
+    if (!user) {
+      setPendingCartAction({ type: 'open_cart' });
+      setAuthPromptMessage('Log in to view and manage your cart.');
+      setAuthMode('login');
+      setIsAuthOpen(true);
+      return;
+    }
+    setIsCartOpen(true);
+  };
+
+  // Handle post-auth resolution of pending actions
+  const resolvePendingAction = (userName, loadedCart) => {
+    if (pendingCartAction) {
+      if (pendingCartAction.type === 'add_to_cart') {
+        executeAddToCart(
+          pendingCartAction.productId,
+          pendingCartAction.size,
+          pendingCartAction.quiet,
+          loadedCart
+        );
+        setIsCartOpen(true);
+      } else if (pendingCartAction.type === 'add_outfit') {
+        executeAddEntireFitToCart();
+      } else if (pendingCartAction.type === 'open_cart') {
+        setIsCartOpen(true);
+      }
+      setPendingCartAction(null);
     }
   };
 
@@ -174,11 +281,7 @@ export function ShopProvider({ children }) {
 
     setIsAuthOpen(false);
     showToast(`Welcome back, ${userName}!`);
-
-    if (pendingAction) {
-      pendingAction();
-      setPendingAction(null);
-    }
+    resolvePendingAction(userName, userCart);
   };
 
   // Signup handler
@@ -199,11 +302,7 @@ export function ShopProvider({ children }) {
     localStorage.setItem('hn_user', JSON.stringify(u));
     setIsAuthOpen(false);
     showToast(`Account created! Welcome to HURANOW, ${u}.`);
-
-    if (pendingAction) {
-      pendingAction();
-      setPendingAction(null);
-    }
+    resolvePendingAction(u, []);
   };
 
   // Logout handler
@@ -211,43 +310,7 @@ export function ShopProvider({ children }) {
     setUser(null);
     localStorage.removeItem('hn_user');
     setCart([]);
-    showToast('You have been logged out.');
-  };
-
-  // Add Item to Cart
-  const addToCart = (productId, size = null, quiet = false) => {
-    const product = PRODUCT_MAP[productId];
-    if (!product) return;
-
-    // Determine default size if not provided
-    let finalSize = size;
-    if (!finalSize) {
-      if (product.category === 'clothes') {
-        const sizes = SIZE_SYSTEM[product.demographic]?.clothes || ['M'];
-        finalSize = sizes[Math.floor(sizes.length / 2)];
-      } else if (product.category === 'shoes') {
-        const sizes = SIZE_SYSTEM[product.demographic]?.shoes || ['42'];
-        finalSize = sizes[Math.floor(sizes.length / 2)];
-      } else {
-        finalSize = 'One Size';
-      }
-    }
-
-    setCart(prev => {
-      const existing = prev.find(item => item.id === productId && item.size === finalSize);
-      if (existing) {
-        return prev.map(item =>
-          item.id === productId && item.size === finalSize
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [...prev, { id: productId, size: finalSize, quantity: 1, addedAt: Date.now() }];
-    });
-
-    if (!quiet) {
-      showToast(`Added ${product.name} to bag`);
-    }
+    showToast('Logged out');
   };
 
   // Update Cart Quantity
@@ -269,7 +332,7 @@ export function ShopProvider({ children }) {
   // Remove from Cart
   const removeFromCart = (index) => {
     setCart(prev => prev.filter((_, i) => i !== index));
-    showToast('Item removed from bag');
+    showToast('Item removed from cart');
   };
 
   // Toggle Wishlist
@@ -292,7 +355,6 @@ export function ShopProvider({ children }) {
     return sum + (prod ? prod.price * item.quantity : 0);
   }, 0);
 
-  // Free delivery threshold: RWF 100,000 (standard in user's design)
   const deliveryThreshold = 100000;
   const deliveryFee = cartSubtotal > 0 && cartSubtotal < deliveryThreshold ? 3000 : 0;
   const cartTotal = cartSubtotal + deliveryFee;
@@ -300,12 +362,11 @@ export function ShopProvider({ children }) {
 
   // Fitting Room Actions
   const setFitDemographic = (demo) => {
-    const mannequin = MANNEQUINS[demo];
-    const sizes = SIZE_SYSTEM[demo];
+    const sizes = SIZE_SYSTEM[demo] || SIZE_SYSTEM.men;
     setFitState(prev => ({
       ...prev,
       demographic: demo,
-      worn: {}, // clear or reset for new demographic
+      worn: {},
       sizes: {
         clothes: sizes.clothes[Math.floor(sizes.clothes.length / 2)],
         shoes: sizes.shoes[Math.floor(sizes.shoes.length / 2)],
@@ -346,29 +407,7 @@ export function ShopProvider({ children }) {
     setIsFittingRoomOpen(true);
   };
 
-  const addEntireFitToCart = () => {
-    const equippedIds = Object.values(fitState.worn).filter(Boolean);
-    if (!equippedIds.length) {
-      showToast('Select at least one piece to add to bag');
-      return;
-    }
-
-    equippedIds.forEach(id => {
-      const prod = PRODUCT_MAP[id];
-      if (prod) {
-        let size = 'One Size';
-        if (prod.category === 'clothes') size = fitState.sizes.clothes;
-        if (prod.category === 'shoes') size = fitState.sizes.shoes;
-        addToCart(id, size, true);
-      }
-    });
-
-    setIsFittingRoomOpen(false);
-    setIsCartOpen(true);
-    showToast(`${equippedIds.length} items from outfit added to bag!`);
-  };
-
-  // Place Order Simulation with Confetti
+  // Place Order Simulation
   const placeOrder = (paymentMethod, paymentDetails) => {
     const ref = 'HN-' + Date.now().toString().slice(-8);
     const orderRecord = {
@@ -380,24 +419,21 @@ export function ShopProvider({ children }) {
       total: cartTotal,
       currency,
       paymentMethod,
-      customer: user || 'Guest Customer',
+      customer: user || 'Customer',
       status: 'Confirmed'
     };
 
-    // Save order
     const existingOrders = JSON.parse(localStorage.getItem(`hn_orders_${user || 'guest'}`) || '[]');
     existingOrders.unshift(orderRecord);
     localStorage.setItem(`hn_orders_${user || 'guest'}`, JSON.stringify(existingOrders));
     setOrders(existingOrders);
 
-    // Fire celebratory confetti!
     confetti({
       particleCount: 120,
       spread: 70,
       origin: { y: 0.6 }
     });
 
-    // Clear cart
     setCart([]);
     return orderRecord;
   };
@@ -405,16 +441,15 @@ export function ShopProvider({ children }) {
   return (
     <ShopContext.Provider
       value={{
-        // Auth & User
         user,
         login,
         signup,
         logout,
-        requireAuth,
 
         // Cart & Wishlist
         cart,
         addToCart,
+        openCart,
         removeFromCart,
         updateCartQty,
         cartSubtotal,
@@ -447,6 +482,8 @@ export function ShopProvider({ children }) {
         setIsAuthOpen,
         authMode,
         setAuthMode,
+        authPromptMessage,
+        setAuthPromptMessage,
         isFittingRoomOpen,
         setIsFittingRoomOpen,
         isCheckoutOpen,
