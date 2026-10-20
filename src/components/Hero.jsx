@@ -9,6 +9,7 @@ export default function Hero() {
     setActiveCategory, 
     setActiveDemographic,
     fitState,
+    equipFitItem,
     formatPrice,
     addEntireFitToCart
   } = useShop();
@@ -48,7 +49,7 @@ export default function Hero() {
 
             {/* Subtext */}
             <p className="text-base sm:text-lg text-[#a1a1aa] max-w-xl font-normal leading-relaxed mb-8">
-              Dress a real shop display mannequin or preview on <strong className="text-white">Black fashion models</strong> with outfits, footwear, and pure African luxury skincare for <strong className="text-white">Men</strong>, <strong className="text-white">Women</strong>, <strong className="text-white">Kids</strong>, and <strong className="text-white">Babies</strong>. Add the whole look to your bag in a single tap.
+              Dress a real boutique display mannequin or preview on <strong className="text-white">Black fashion models</strong> with outfits, footwear, and pure African luxury skincare for <strong className="text-white">Men</strong>, <strong className="text-white">Women</strong>, <strong className="text-white">Kids</strong>, and <strong className="text-white">Babies</strong>. Add the whole look to your bag in a single tap.
             </p>
 
             {/* Hero CTAs */}
@@ -110,13 +111,14 @@ export default function Hero() {
                   </span>
                 </div>
                 <span className="text-[10px] bg-zinc-900 border border-zinc-700 text-amber-400 font-bold px-2 py-0.5 rounded-full uppercase">
-                  Dressed & Fitted
+                  Dressed In Clothes
                 </span>
               </div>
 
               {/* Live Mannequin Display Stage */}
               <div className="relative w-full aspect-[4/5] bg-gradient-to-b from-zinc-900 via-black to-[#050507] flex items-center justify-center overflow-hidden">
                 <MannequinVisualizer
+                  variant="showcase"
                   demographic="men"
                   worn={fitState?.worn || {}}
                   onSlotSelect={() => setIsFittingRoomOpen(true)}
@@ -125,6 +127,7 @@ export default function Hero() {
                   userLength="regular"
                   userBuild="athletic"
                   selectedSize={fitState?.sizes?.clothes || 'L'}
+                  onQuickOutfitSelect={(topId) => equipFitItem('top', topId)}
                 />
               </div>
 
@@ -146,7 +149,7 @@ export default function Hero() {
                     className="flex-1 py-2.5 px-4 rounded-xl bg-white text-black font-extrabold text-xs hover:bg-zinc-200 transition-all flex items-center justify-center gap-1.5 shadow-lg active:scale-95 uppercase tracking-wide"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-black" />
-                    <span>Open Fitting Studio</span>
+                    <span>Launch Fitting Studio</span>
                   </button>
 
                   <button
@@ -161,18 +164,6 @@ export default function Hero() {
               </div>
 
             </div>
-
-            {/* Accent Floating Badge */}
-            <div className="absolute -bottom-4 -left-4 bg-zinc-900/90 border border-zinc-700 rounded-xl p-3 shadow-2xl flex items-center gap-3 backdrop-blur-md z-30">
-              <div className="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center font-black">
-                <Zap className="w-5 h-5 fill-black" />
-              </div>
-              <div className="text-xs">
-                <div className="font-bold text-white uppercase">Real-Time Drape</div>
-                <div className="text-zinc-400 text-[11px]">Adapts to height & length</div>
-              </div>
-            </div>
-
           </div>
 
         </div>

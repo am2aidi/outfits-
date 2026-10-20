@@ -16,19 +16,16 @@ export default function MannequinVisualizer({
   selectedSize = 'L',
   onSizeChange,
   finish: parentFinish,
-  onFinishChange
+  onFinishChange,
+  variant = 'full', // 'full' (with sliders in modal) | 'showcase' (sleek in Hero & Banner)
+  onQuickOutfitSelect
 }) {
-  // Mannequin finish / view mode:
-  // 'obsidian': Real Matte Black Mannequin on Glass Pedestal (from uploaded photo 2)
-  // 'studio': Real Studio Catalog Mannequin wearing the clothes (from store-fitting-room.html m1, m2, m3)
-  // 'model': Real Black Fashion Model (Kofi, Amina, Jidenna, Baby Zuri)
-  // 'sculpted-white': Athletic Sculpted White Mannequin (from uploaded photo 1)
   const [localFinish, setLocalFinish] = useState('obsidian');
   const finish = parentFinish || localFinish;
   const setFinish = onFinishChange || setLocalFinish;
 
-  const [showRulerGuides, setShowRulerGuides] = useState(true);
-  const [activeSlotFocus, setActiveSlotFocus] = useState('top'); // 'top' | 'bottom' | 'shoe' | 'head' | 'face' | 'bag' | 'all'
+  const [showRulerGuides, setShowRulerGuides] = useState(false);
+  const [activeSlotFocus, setActiveSlotFocus] = useState('top');
 
   // Look up equipped products
   const topProduct = worn.top ? PRODUCT_MAP[worn.top] : null;
@@ -40,7 +37,7 @@ export default function MannequinVisualizer({
 
   const currentModel = BLACK_MODELS[demographic] || BLACK_MODELS.men;
 
-  // Real-time anatomical body measurements (in cm)
+  // Real-time body measurements (in cm)
   const heightRatio = userHeight / 175;
   const chestCm = Math.round((userBuild === 'slim' ? 92 : userBuild === 'athletic' ? 104 : userBuild === 'plus' ? 118 : 98) * heightRatio);
   const waistCm = Math.round((userBuild === 'slim' ? 74 : userBuild === 'athletic' ? 82 : userBuild === 'plus' ? 98 : 80) * heightRatio);
@@ -56,45 +53,145 @@ export default function MannequinVisualizer({
     topProduct || bottomProduct || shoeProduct;
 
   // Determine which real mannequin / model image to show based on finish and equipped garment
+  // THE MANNEQUIN IS ALWAYS WEARING CLOTHES!
   const getMannequinImage = () => {
     // 1. Black Fashion Model View
     if (finish === 'model') {
       return currentModel.image;
     }
 
-    // 2. Sculpted White Mannequin View (from user's uploaded photo 1)
+    // 2. Sculpted White Studio Mannequin
     if (finish === 'sculpted-white') {
       return '/mannequin-white.jpg';
     }
 
-    // 3. Studio Catalog Mannequin View (from store-fitting-room.html m1, m2, m3)
+    // 3. Studio Catalog Mannequin (from store-fitting-room.html m1, m2, m3)
     if (finish === 'studio') {
-      if (topProduct?.garmentStyle === 'puffer') return '/m2.jpg';
-      if (topProduct?.garmentStyle === 'denim') return '/m3.jpg';
-      if (topProduct?.garmentStyle === 'coat') return '/m1.jpg';
+      if (topProduct?.garmentStyle === 'puffer' || topProduct?.id === 'hn-top-04') return '/m2.jpg';
+      if (topProduct?.garmentStyle === 'denim' || topProduct?.id === 'hn-top-05') return '/m3.jpg';
+      if (topProduct?.garmentStyle === 'coat' || topProduct?.id === 'hn-wtop-02') return '/m1.jpg';
       return '/m1.jpg';
     }
 
-    // 4. Default: Matte Obsidian Mannequin (from user's uploaded photo 2)
-    // When specific pieces are worn, show the real mannequin wearing that garment:
-    if (topProduct?.garmentStyle === 'puffer') return '/m2.jpg';
-    if (topProduct?.garmentStyle === 'denim') return '/m3.jpg';
-    if (topProduct?.garmentStyle === 'coat') return '/m1.jpg';
-    
-    // For Windrunner or other tops, if focused on shoes or bottoms:
-    if (activeSlotFocus === 'shoe' && shoeProduct?.image) return shoeProduct.image;
-    if (activeSlotFocus === 'bottom' && bottomProduct?.image) return bottomProduct.image;
+    // 4. Default: Matte Black Boutique Mannequin wearing the HURANOW garments on glass pedestal
+    if (topProduct?.garmentStyle === 'hoodie' || topProduct?.id === 'hn-top-02') {
+      return '/mannequin-hoodie.jpg';
+    }
+    if (topProduct?.garmentStyle === 'leather' || topProduct?.id === 'hn-top-06') {
+      return '/mannequin-leather.jpg';
+    }
+    if (topProduct?.garmentStyle === 'tee' || topProduct?.id === 'hn-top-03' || topProduct?.garmentStyle === 'croptop') {
+      return '/mannequin-tee.jpg';
+    }
+    if (topProduct?.garmentStyle === 'puffer' || topProduct?.id === 'hn-top-04') {
+      return '/m2.jpg';
+    }
+    if (topProduct?.garmentStyle === 'denim' || topProduct?.id === 'hn-top-05') {
+      return '/m3.jpg';
+    }
+    if (topProduct?.garmentStyle === 'coat' || topProduct?.id === 'hn-wtop-02') {
+      return '/m1.jpg';
+    }
 
-    return '/mannequin-stealth-black.jpg';
+    // Default to the flagship Kigali Stealth Windrunner outfit (mannequin wearing jacket, tactical cargos & sneakers)
+    return '/mannequin-windrunner.jpg';
   };
 
   const currentDisplayImage = getMannequinImage();
 
+  // Curated quick outfits for instant switching
+  const quickOutfits = [
+    { id: 'hn-top-01', label: 'Windrunner', color: 'bg-zinc-800' },
+    { id: 'hn-top-02', label: 'Stealth Hoodie', color: 'bg-zinc-800' },
+    { id: 'hn-top-06', label: 'Biker Leather', color: 'bg-zinc-800' },
+    { id: 'hn-top-05', label: 'Raw Denim', color: 'bg-zinc-800' },
+    { id: 'hn-top-04', label: 'Down Puffer', color: 'bg-zinc-800' },
+    { id: 'hn-top-03', label: 'Boxy Tee', color: 'bg-zinc-800' }
+  ];
+
+  // ========================================================
+  // SHOWCASE VARIANT (Clean, sleek, decluttered for Hero & Banner)
+  // ========================================================
+  if (variant === 'showcase') {
+    return (
+      <div className="relative w-full h-full flex flex-col justify-between select-none">
+        {/* Quick Outfit Switcher Bar */}
+        <div className="w-full flex items-center justify-between px-3 py-2 z-20 bg-black/90 backdrop-blur-md border-b border-zinc-800/80">
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+            <span className="text-[10px] uppercase font-bold text-zinc-400 mr-1 hidden sm:inline">Look:</span>
+            {quickOutfits.map((outfit) => {
+              const isSelected = worn.top === outfit.id;
+              return (
+                <button
+                  key={outfit.id}
+                  onClick={() => onQuickOutfitSelect && onQuickOutfitSelect(outfit.id)}
+                  className={`px-2.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap transition-all ${
+                    isSelected
+                      ? 'bg-white text-black shadow-lg scale-102'
+                      : 'bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-800'
+                  }`}
+                >
+                  {outfit.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold whitespace-nowrap ml-2">
+            Real Fit
+          </span>
+        </div>
+
+        {/* Real Photographic Mannequin Display Stage */}
+        <div className="relative w-full flex-1 flex items-center justify-center overflow-hidden bg-gradient-to-b from-[#111114] via-[#09090b] to-[#040405] p-2 min-h-[360px]">
+          <div className="relative w-full h-full max-h-[460px] rounded-2xl overflow-hidden border border-zinc-800/80 bg-zinc-950 shadow-2xl flex items-center justify-center group">
+            <img
+              src={currentDisplayImage}
+              alt="Real Boutique Mannequin Wearing HURANOW Clothes"
+              className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-103"
+            />
+
+            {/* Subtle Vignette Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/25 pointer-events-none"></div>
+
+            {/* Clean Hotspot Badges Over Garments */}
+            <div className="absolute inset-0 p-3.5 flex flex-col justify-between pointer-events-none">
+              <div className="flex items-center justify-between pointer-events-auto">
+                <span className="text-[10px] bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-zinc-800 text-zinc-300 font-bold">
+                  {topProduct?.name || 'Kigali Stealth Windrunner'}
+                </span>
+                <span className="text-[10px] bg-amber-400 text-black px-2 py-0.5 rounded-full font-black uppercase">
+                  {formatPrice ? formatPrice(topProduct?.price || 68000) : 'RWF 68,000'}
+                </span>
+              </div>
+
+              {/* Minimal Bottom Pill */}
+              <div className="bg-black/90 backdrop-blur-md border border-zinc-800/90 px-3 py-2 rounded-xl pointer-events-auto flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="text-[11px] text-zinc-300 font-bold">
+                    Dressed on Matte Boutique Mannequin
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono text-zinc-400">
+                  Size {selectedSize} • 178 cm
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ========================================================
+  // FULL VARIANT (Used inside FittingRoomModal with full customization)
+  // ========================================================
   return (
     <div className="relative w-full h-full flex flex-col justify-between select-none">
       
-      {/* Top Header: Real Mannequin Finish Switcher & Measurements Toggle */}
-      <div className="w-full flex items-center justify-between px-3 py-2 z-30 text-[11px] bg-black/85 backdrop-blur-md border-b border-zinc-800 rounded-t-2xl">
+      {/* Top Header: Finish Switcher & Ruler Specs Toggle */}
+      <div className="w-full flex items-center justify-between px-3 py-2.5 z-30 text-[11px] bg-black/85 backdrop-blur-md border-b border-zinc-800 rounded-t-2xl">
         <div className="flex items-center gap-1 bg-zinc-950 p-1 rounded-lg border border-zinc-800 overflow-x-auto scrollbar-none">
           <button
             onClick={() => setFinish('obsidian')}
@@ -116,17 +213,6 @@ export default function MannequinVisualizer({
             }`}
           >
             Studio Mannequin
-          </button>
-
-          <button
-            onClick={() => setFinish('model')}
-            className={`px-2.5 py-1 rounded-md text-[10px] font-bold whitespace-nowrap transition-all ${
-              finish === 'model'
-                ? 'bg-white text-black shadow border border-white'
-                : 'text-zinc-400 hover:text-white'
-            }`}
-          >
-            Black Model
           </button>
 
           <button
@@ -154,34 +240,32 @@ export default function MannequinVisualizer({
         </button>
       </div>
 
-      {/* Main Mannequin Stage: Real High-Fashion Photographic Mannequin Wearing Clothes */}
-      <div className="relative w-full flex-1 flex items-center justify-center min-h-[460px] overflow-hidden bg-gradient-to-b from-[#111114] via-[#09090b] to-[#040405] p-3">
+      {/* Main Mannequin Stage: Real Photographic Mannequin Wearing Clothes */}
+      <div className="relative w-full flex-1 flex items-center justify-center min-h-[440px] overflow-hidden bg-gradient-to-b from-[#111114] via-[#09090b] to-[#040405] p-3">
         
-        {/* Overhead Ambient Retail Light */}
+        {/* Overhead Retail Glow */}
         <div className="absolute top-0 w-80 h-80 bg-radial from-zinc-700/20 via-black/80 to-black blur-3xl pointer-events-none"></div>
 
-        {/* Real Mannequin Photo Container */}
+        {/* Real Mannequin Photo Frame */}
         <div className="relative w-full h-full max-h-[480px] max-w-[340px] rounded-2xl overflow-hidden border border-zinc-800/80 bg-zinc-950 shadow-2xl flex items-center justify-center group">
           
-          {/* Real Mannequin Photograph */}
+          {/* Real Mannequin Photograph Wearing Clothes */}
           <img
             src={currentDisplayImage}
             alt="Real Store Mannequin Wearing Clothes"
-            className="w-full h-full object-cover object-top transition-all duration-500 group-hover:scale-102"
+            className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-102"
           />
 
           {/* Vignette Shadow Gradients */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none"></div>
 
-          {/* ======================================================== */}
-          {/* INTERACTIVE HOTSPOT PINS ON THE REAL MANNEQUIN'S BODY    */}
-          {/* ======================================================== */}
+          {/* Hotspots Floating On Garments */}
           <div className="absolute inset-0 pointer-events-none p-3 flex flex-col justify-between">
             
             {/* Top Label */}
             <div className="flex items-center justify-between pointer-events-auto">
               <span className="text-[10px] bg-black/85 backdrop-blur-md px-2.5 py-1 rounded-full border border-zinc-700 text-zinc-300 font-bold shadow-lg">
-                {finish === 'obsidian' ? 'Matte Obsidian Boutique Sculpt' : finish === 'studio' ? 'Studio Catalog Mannequin' : finish === 'model' ? 'Black Fashion Model' : 'Sculpted White Studio Mannequin'}
+                {finish === 'obsidian' ? 'Matte Boutique Mannequin' : finish === 'studio' ? 'Studio Catalog Mannequin' : finish === 'model' ? 'Black Fashion Model' : 'Sculpted Studio Mannequin'}
               </span>
 
               <span className="text-[10px] bg-amber-400 text-black px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-lg">
@@ -189,9 +273,8 @@ export default function MannequinVisualizer({
               </span>
             </div>
 
-            {/* Middle Hotspots Floating on Garments */}
-            <div className="space-y-2 pointer-events-auto my-auto pl-1">
-              {/* Top / Outerwear Pin */}
+            {/* Garment Hotspots */}
+            <div className="space-y-1.5 pointer-events-auto my-auto pl-1">
               {topProduct && (
                 <button
                   onClick={() => {
@@ -205,12 +288,11 @@ export default function MannequinVisualizer({
                   }`}
                 >
                   <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                  <span className="max-w-[130px] truncate">{topProduct.name}</span>
+                  <span className="max-w-[120px] truncate">{topProduct.name}</span>
                   <span className="text-zinc-400">{formatPrice(topProduct.price)}</span>
                 </button>
               )}
 
-              {/* Bottoms Pin */}
               {bottomProduct && (
                 <button
                   onClick={() => {
@@ -224,12 +306,11 @@ export default function MannequinVisualizer({
                   }`}
                 >
                   <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
-                  <span className="max-w-[130px] truncate">{bottomProduct.name}</span>
+                  <span className="max-w-[120px] truncate">{bottomProduct.name}</span>
                   <span className="text-zinc-400">{formatPrice(bottomProduct.price)}</span>
                 </button>
               )}
 
-              {/* Shoes Pin */}
               {shoeProduct && (
                 <button
                   onClick={() => {
@@ -243,25 +324,24 @@ export default function MannequinVisualizer({
                   }`}
                 >
                   <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                  <span className="max-w-[130px] truncate">{shoeProduct.name}</span>
+                  <span className="max-w-[120px] truncate">{shoeProduct.name}</span>
                   <span className="text-zinc-400">{formatPrice(shoeProduct.price)}</span>
                 </button>
               )}
             </div>
 
-            {/* Bottom Card on Mannequin: Dressed Garment Specs & Length Drape */}
-            <div className="bg-black/90 backdrop-blur-md border border-zinc-800 p-3 rounded-xl pointer-events-auto space-y-1">
+            {/* Dressed Garment Specs Card */}
+            <div className="bg-black/90 backdrop-blur-md border border-zinc-800 p-2.5 rounded-xl pointer-events-auto space-y-1">
               <div className="flex items-center justify-between text-[11px] font-bold text-white">
                 <span className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                  <span>{focusedProduct?.name || 'Complete Dressed Look'}</span>
+                  <span className="truncate max-w-[180px]">{focusedProduct?.name || 'Complete Dressed Look'}</span>
                 </span>
                 <span className="text-amber-400">
                   {focusedProduct ? formatPrice(focusedProduct.price) : ''}
                 </span>
               </div>
 
-              {/* Length Drape & Height Fit Note */}
               <div className="text-[10px] text-zinc-400 flex items-center justify-between pt-1 border-t border-zinc-800/80">
                 <span>
                   Length Cut: <strong className="text-white uppercase">{userLength}</strong>
@@ -274,9 +354,7 @@ export default function MannequinVisualizer({
 
           </div>
 
-          {/* ======================================================== */}
-          {/* MEASUREMENT RULER GUIDES OVERLAY (SHOWS REAL BODY SPECS) */}
-          {/* ======================================================== */}
+          {/* Measurement Specs Overlay */}
           {showRulerGuides && (
             <div className="absolute top-12 left-3 bottom-20 pointer-events-none flex flex-col justify-between font-mono text-[9px] font-bold z-20">
               <div className="bg-black/75 px-1.5 py-0.5 rounded text-amber-400 border border-amber-500/30">
@@ -323,7 +401,7 @@ export default function MannequinVisualizer({
           </div>
         </div>
 
-        {/* Garment Length Cut (Petite/Crop vs Standard vs Tall) */}
+        {/* Garment Length Cut */}
         <div className="flex items-center justify-between gap-2 text-xs">
           <span className="text-zinc-400 text-[11px] font-semibold shrink-0">
             Length Cut:

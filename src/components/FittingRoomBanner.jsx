@@ -5,7 +5,7 @@ import { BLACK_MODELS, PRODUCT_MAP } from '../data/products';
 import MannequinVisualizer from './MannequinVisualizer';
 
 export default function FittingRoomBanner() {
-  const { setIsFittingRoomOpen, fitState, setFitDemographic, formatPrice } = useShop();
+  const { setIsFittingRoomOpen, fitState, setFitDemographic, formatPrice, equipFitItem } = useShop();
 
   const [previewTab, setPreviewTab] = useState('mannequin'); // 'mannequin' | 'model'
 
@@ -108,6 +108,7 @@ export default function FittingRoomBanner() {
                 <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-zinc-950 mb-3 border border-zinc-800/80 flex items-center justify-center">
                   {previewTab === 'mannequin' ? (
                     <MannequinVisualizer
+                      variant="showcase"
                       demographic={fitState.demographic}
                       worn={fitState.worn}
                       onSlotSelect={() => setIsFittingRoomOpen(true)}
@@ -115,6 +116,7 @@ export default function FittingRoomBanner() {
                       userHeight={178}
                       userBuild="athletic"
                       selectedSize={fitState.sizes.clothes}
+                      onQuickOutfitSelect={(topId) => equipFitItem('top', topId)}
                     />
                   ) : (
                     <div className="relative w-full h-full">
