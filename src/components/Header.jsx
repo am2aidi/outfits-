@@ -47,7 +47,7 @@ export default function Header() {
   return (
     <>
       {/* Top Utility Bar (Nike Style) */}
-      <div className="bg-[#050505] border-b border-[#1c1c1f] text-[11px] text-[#8e8e93] py-1.5 px-4 sm:px-8">
+      <div className="top-utility-bar bg-[#050505] border-b border-[#1c1c1f] text-[11px] text-[#8e8e93] py-1.5 px-4 sm:px-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span className="font-semibold text-white tracking-widest text-[10px]">HURANOW PERFORMANCE LAB</span>

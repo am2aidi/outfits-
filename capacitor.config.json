@@ -1,0 +1,9 @@
+{
+  "appId": "com.huranow.app",
+  "appName": "huranow",
+  "webDir": "dist",
+  "server": {
+    "url": "https://huranow.vercel.app/",
+    "cleartext": true
+  }
+}
